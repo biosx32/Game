@@ -1,17 +1,12 @@
-import GameGraphics
-import GameUpdate
-import Init
-import pygame
-# ---------
+from Init import init_main
 
-Init.InitMain()
-GameGraphics.GraphicsInit()
+def run_main():
+	init_main()
+	# late import because of variable initialization
+	from Game.OnEvents import on_game_step
 
-while 1:
-	# --- Game logic
-	GameUpdate.MainUpdate()
+	while 1:
+		on_game_step()
 
-	# --- Drawing code
-
-	GameGraphics.MainDraw()
+run_main()
 
