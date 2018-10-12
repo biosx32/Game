@@ -30,21 +30,26 @@ def DrawGameObjects():
 	global visible_objs
 	global lcp
 
-	draw_objs = Get.get_vo_list()
+	vis_objs = Get.get_vo_list()
+	draw_objs = vis_objs[:]
 	draw_objs.extend([Player])
 
 	for go in draw_objs:
 
 		image = images[go.tname]
 		dx, dy = (go.pos - Camera.pos) * block_size
+
+		pygame.draw.rect(screen, (0, 255, 255), (dx, dy, *block_size), 2)
 		screen.blit(image, (dx, dy, 0, 0))
 
-	coll = Get.create_collision_map(draw_objs)
-	for key in coll:
-		obj_list = coll[key]
-		for gmo in obj_list:
+	coll = Get.create_cmap_pixels(vis_objs, block_div=4)
+	finemap = Get.create_finecheck_map(coll, Player.pos, radius=1)
+
+	for coord in finemap:
+		print(coord)
+		for gmo in coord:
 			dx, dy = (gmo.pos - Camera.pos) * block_size
-			pygame.draw.rect(screen, (255,0,0), (dx,dy, *block_size), 3)
+			pygame.draw.rect(screen, (0, 255, 0), (dx, dy, *block_size), 3)
 
 
 	pos_label = QuickText("Player X,Y: {:.2f},{:.2f}".format(*Player.pos))

@@ -81,8 +81,20 @@ def process_collisions(collision_list):
 				handle_single_collision(x, other)
 
 
-def create_collision_map(object_list, coord_div=1):
+def create_finecheck_map(cmap_pixels: dict, center, radius=1):
+	fine_list = []
 
+	cx, cy = center
+	for key in cmap_pixels.keys():
+		kx, ky = V2(key)
+		dx, dy = abs(cx - kx), abs(cy - ky)
+		if dx <= 1 and dy <= 1:
+			fine_list.append(cmap_pixels[key])
+
+	return fine_list
+
+
+def create_cmap_pixels(object_list, block_div=1):
 	# determine best output format
 	# todo: Indexing as quick check, if 'PixelCollision' then BoxCheck, so on...
 	# todo: check collisions for all near-pixel objects? (for objs bigger than one sqare)
@@ -91,8 +103,7 @@ def create_collision_map(object_list, coord_div=1):
 	object_map = {}
 
 	for obj in object_list:
-		view_pos = (obj.pos - Camera.pos).to_integer()
-		index = ((coord_div * view_pos) / coord_div).to_tuple()
+		index = obj.pos.to_tuple()
 
 		# create key if not already present
 		if index not in object_map.keys():
@@ -105,11 +116,15 @@ def create_collision_map(object_list, coord_div=1):
 
 		object_map[index].append(obj)
 
+	return object_map
+
+
+def get_cmap_collisions(object_list, block_div=1):
+	cmap_pixels = create_cmap_pixels(object_list, block_div)
 	collision_map = {}
-	for key in object_map:
-		n_obj = len(object_map[key])
+	for key in cmap_pixels:
+		n_obj = len(cmap_pixels[key])
 		if n_obj > 1:
-			objects = object_map[key]
-			collision_map[key] = objects
+			collision_map[key] = cmap_pixels[key]
 
 	return collision_map

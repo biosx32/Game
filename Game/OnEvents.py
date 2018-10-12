@@ -1,7 +1,7 @@
 import pygame
 from timeit import default_timer as timer
 from Game.Draw import graphics_step
-from Game.Get import get_vo_list, create_collision_map
+from Game.Get import get_vo_list
 import sys
 import Init
 
@@ -16,11 +16,8 @@ save_timer = timer()
 def on_collision_check():
 	check_list = get_vo_list()
 	check_list.extend([Player])
-	cmap = create_collision_map(check_list)
-	for ckey in cmap:
-		val = cmap[ckey]
-		print(ckey, val)
 
+	pass
 
 
 def on_player_move():
