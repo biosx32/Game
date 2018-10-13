@@ -5,6 +5,18 @@ from Game.Low import V2
 from Game.Objects import GameMap
 
 
+window_size = (1000, 700)
+block_size = 50
+b_count_xy = V2(window_size[0], window_size[1]) / block_size
+b_size_xy = V2(block_size, block_size)
+
+Camera = Objects.Camera()
+Player = Objects.Player(V2(2, 2))
+game_map = GameMap('res\\map.bmp', b_size_xy)
+
+images = {}
+
+
 def init_load_images():
 	global images
 	images = {
@@ -17,19 +29,8 @@ def init_load_images():
 
 
 def create_vars():
-	global window_size, block_size, b_count_xy, b_size_xy
-	global Camera, Player, game_map
-
-	window_size = (1000, 700)
-	block_size = 50
-	b_count_xy = V2(window_size[0], window_size[1]) / block_size
-	b_size_xy = V2(block_size, block_size)
-
-	Camera = Objects.Camera()
-	Player = Objects.Player(V2(2, 2))
-	game_map = GameMap('res\\map.bmp', b_size_xy)
-
 	init_load_images()
+
 
 
 def check_vars():
