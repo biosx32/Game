@@ -1,6 +1,6 @@
 import Init
 from Game.Low import V2
-import Game.Objects as Objects
+import Game.GmObjects as Objects
 
 #
 window_size = Init.window_size
@@ -20,21 +20,21 @@ save_visible_objects: list = []
 save_camera_pos = V2(0, 0)
 
 
-def create_finecheck_map(cmap_pixels: dict, center, radius=1):
+def get_near_objects(check_pos, cmap_pixels: dict, radius=1):
 	fine_list = []
 
-	cx, cy = center
+	cx, cy = check_pos
 	key: tuple
 	for key in cmap_pixels.keys():
 		kx, ky = V2(key)
 		dx, dy = abs(cx - kx), abs(cy - ky)
-		if dx <= 1 and dy <= 1:
+		if dx <= radius and dy <= radius:
 			fine_list.extend(cmap_pixels[key])
 
 	return fine_list
 
 
-def create_cmap_pixels(object_list, block_div=1):
+def create_object_pixelmap(object_list, block_div=1):
 	# determine best output format
 	# todo: Indexing as quick check, if 'PixelCollision' then BoxCheck, so on...
 	# todo: check collisions for all near-pixel objects? (for objs bigger than one sqare)
@@ -87,7 +87,7 @@ def update_vo_list(game_map: Objects.GameMap, camera_pos, b_count_xy):
 	game_map.update_vo_list_from(visible_objects)
 
 
-def get_cmap_collisions(cmap_pixels):
+def filter_pixelmap_single(cmap_pixels):
 	collision_map = {}
 	key: tuple
 	for key in cmap_pixels:

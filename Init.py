@@ -1,9 +1,14 @@
 import pygame
-import Game.Objects as Objects
+import Game.GmObjects as Objects
 import Game.Low as Low
 from Game.Low import V2
-from Game.Objects import GameMap
+from Game.GmObjects import GameMap
+import os
 
+if __name__ == "__main__":
+	raise BlockingIOError("do not run this file lol...")
+
+root_dir = os.getcwd() + "\\"
 
 window_size = (1000, 700)
 block_size = 50
@@ -12,16 +17,18 @@ b_size_xy = V2(block_size, block_size)
 
 Camera = Objects.Camera()
 Player = Objects.Player(V2(2, 2))
-game_map = GameMap('res\\map.bmp', b_size_xy)
+game_map = GameMap(root_dir + 'res\\map.bmp', b_size_xy)
 
 images = {}
+
+
 
 
 def init_load_images():
 	global images
 	images = {
 		'block': pygame.image.load("res\\brick_block.png"),
-		'player': pygame.image.load("res\\player.png"),
+		'player': pygame.image.load("res\\player2.png"),
 		'explosion': pygame.image.load("res\\explosion.png")
 	}
 
@@ -51,5 +58,5 @@ def init_main():
 	check_vars()
 
 	pygame.init()
-	pygame.display.set_caption("Dumbio")
+	pygame.display.set_caption("Dumb/io")
 

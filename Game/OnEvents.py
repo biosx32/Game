@@ -2,49 +2,40 @@ import pygame
 from timeit import default_timer as timer
 from Game.Draw import graphics_step
 import Game.Get as Get
-import Game.Objects as Objects
+import Game.GmObjects as Gmo
 import sys
+from Game.Low import V2
 
 import Init
 
 Player = Init.Player
+pos_save = Player.pos.copy()
 Camera = Init.Camera
 game_map = Init.game_map
 moveX, moveY = [0, 0], [0, 0]
 b_count_xy = Init.b_count_xy
-
+b_size_xy = Init.b_size_xy
 save_timer = timer()
 
 
-def on_process_single_action(gmo: Objects.GameObject, action: Objects.Action):
-	act_name, data = action.unpack()
-	print("Action", act_name, "triggered on:", str(gmo))
-
+def on_process_single_action(pobj: Gmo.GameObject, action: Gmo.Action):
+	global old_pos
 	return_actions = []
 
-	def add_action(action):
-		return_actions.append(action)
+	act_name, arguments = action.unpack()
+	print("Action", act_name, "triggered on:", str(pobj))
 
-	if gmo.tname == "player":
-		if act_name == 'collision':
-			other: Objects.GameObject
-			for other in data:
-				#game_map.delobject(other.gID)
-				pass
+	if act_name == 'check_collision':
+		pobj.in_collision = False
 
-	if gmo.tname == "block":
-
-		if act_name == 'check_collision':
-			gmo.in_collision = False
-
-		if act_name == 'collision':
-			gmo.in_collision = True
-			add_action(Objects.Action("check_collision"))
+	if act_name == 'collision':
+		pobj.in_collision = True
+		return_actions.append(Gmo.Action("check_collision"))
 
 	return return_actions
 
 
-def on_process_actions(gmo: Objects.GameObject):
+def on_process_actions(gmo: Gmo.GameObject):
 	unprocessed = []
 	actions_copy = gmo.get_actions()
 	for action in actions_copy:
@@ -56,30 +47,43 @@ def on_process_actions(gmo: Objects.GameObject):
 	gmo.update_actions(unprocessed)
 
 # add collision a
-def on_object_collide(gmo_main: Objects.GameObject, object_list: list):
-	main_action = Objects.Action("collision", data=object_list)
-	side_action = Objects.Action("collision", data=[gmo_main])
+def on_object_collide(gmo_main: Gmo.GameObject, object_list: list):
+	main_action = Gmo.Action("collision", data=object_list)
+	side_action = Gmo.Action("collision", data=[gmo_main])
 
 	gmo_main.add_action(main_action)
 
-	gmo: Objects.GameObject
+	gmo: Gmo.GameObject
 	for gmo in object_list:
 		gmo.add_action(side_action)
 
 
-def on_collision_check():
-	#
+def get_near_objs_of(position, radius=1.0):
 	check_list = game_map.get_vo_list()
-	coll_map = Get.create_cmap_pixels(check_list, block_div=4)
-	clean_map = Get.get_cmap_collisions(coll_map)
-	#
-	pl_coll = Get.create_finecheck_map(coll_map, Player.pos, radius=1)
+	objects_map = Get.create_object_pixelmap(check_list, block_div=16)
+	# clean_map = Get.filter_pixelmap_single(objects_map)
+	near_objs = Get.get_near_objects(position, objects_map, radius=radius)
+
+	return near_objs
+
+def on_check_collisions():
+	pl_coll = get_near_objs_of(Player.pos, radius=1)
 
 	if pl_coll:
-		on_object_collide(Player, pl_coll)
+	#	on_object_collide(Player, pl_coll)
+		pass
 
-	for key in clean_map:
-		print("TODO collision: ", clean_map[key])
+
+def player_on_ground():
+	ghost_pos = V2(Player.pos.x , Player.pos.y + 0.1)
+	ghost_pos_2 = V2(Player.pos.x, Player.pos.y - 0.1)
+
+	og_gpl = bool(get_near_objs_of(ghost_pos, radius=1.1))
+	og_gpl_top = bool(get_near_objs_of(ghost_pos_2, radius=1.1))
+
+	og_pl = bool(get_near_objs_of(Player.pos, radius=1.1))
+
+	return not og_gpl_top and (og_pl or og_gpl)
 
 def on_player_move():
 	global save_timer
@@ -87,15 +91,51 @@ def on_player_move():
 
 	t_end = timer()
 
-	# if t_end - t_start > 0.2:
-	if 1:
-		Player.pos.x += (-moveX[0] + moveX[1])
-		Player.pos.y += (-moveY[0] + moveY[1])
+	GhostPlayer = Gmo.Player(Player.pos.copy())
 
-		save_timer = t_end
+	# move ghost player and check if he collides
 
-	# gravity
-	#Player.pos.y += 0.01
+	def UpdateRelative(relx, rely):
+		GhostPlayer.pos = V2(Player.pos.x + relx, Player.pos.y + rely)
+		if not get_near_objs_of(GhostPlayer.pos, radius=0.97):
+			Player.pos = GhostPlayer.pos
+
+
+	if player_on_ground():
+		# reset forces
+		Player.gaccel = 0
+		Player.jmp_energy = 3
+
+	else:
+		# gravity
+		if not moveY[0] or not Player.jmp_energy > 0:
+			Player.gaccel += 0.01
+
+
+
+	if moveY[0]:
+		Player.jmp_energy -= 1
+
+		if Player.jmp_energy > 0:
+			Player.gaccel -= 0.07
+
+
+
+	UpdateRelative(- moveX[0], 0)
+	UpdateRelative(+ moveX[1], 0)
+	UpdateRelative(0, + Player.gaccel)
+
+
+
+
+
+
+
+
+
+
+
+	# save_timer = t_end
 
 	Player.pos = Player.pos.rectify()
 	Player.pos = Player.pos.restrict(Init.game_map.size)
@@ -151,7 +191,7 @@ def on_update_vo_list():
 def on_check_actions():
 	visible_objs = game_map.get_vo_list()
 
-	obj: Objects.GameObject
+	obj: Gmo.GameObject
 	for obj in visible_objs:
 		if obj.is_active():
 			on_process_actions(obj)
@@ -165,9 +205,10 @@ def on_check_actions():
 def on_logic_step():
 	on_check_events()
 	on_update_vo_list()
-	on_collision_check()
-	on_check_actions()
 	on_player_move()
+	on_check_collisions()
+	on_check_actions()
+
 
 
 def on_game_step():

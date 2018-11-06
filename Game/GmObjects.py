@@ -45,10 +45,10 @@ class GameObject:
 		self._actions = actions
 
 	def __init__(self, pos, tname=None):
-		if not pos:
+		if not isinstance(pos, (V2,)):
 			pos = V2(0, 0)
 
-		self.pos = pos
+		self.pos = pos.copy()
 		self.tname = tname
 		self.rID = None
 		self.gID = GameObject._sharedID_counter
@@ -57,8 +57,6 @@ class GameObject:
 		self._collisionCheck = False
 		self.in_collision = False
 		self._actions = []
-
-		print(self.rID, self.gID)
 
 	def set_rID(self, number):
 		self.rID = number
@@ -79,6 +77,8 @@ class Player(GameObject):
 	def __init__(self, pos):
 		super().__init__(pos, tname='player')
 		self.type = 'player'
+		self.gaccel = 0.0
+		self.jmp_energy = 0.0
 
 
 class Camera(GameObject):

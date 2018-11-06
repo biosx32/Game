@@ -12,6 +12,9 @@ class V2:
 	def __eq__(self, other):
 		return not self.NEQ(other)
 
+	def copy(self):
+		return V2(self.x, self.y)
+
 	def NEQ(self, other, tolerance=0.001):
 		return abs(self.x - other.x) + abs(self.y - other.y) > tolerance
 
